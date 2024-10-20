@@ -3,9 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import datetime
 
-
 Base = declarative_base()
-
 
 class Project(Base):
     __tablename__ = "projects"
@@ -36,8 +34,8 @@ class Ticket(Base):
     project = relationship("Project", back_populates="tickets")
     kanban_status = relationship('KanbanStatus', back_populates='tickets')
 
-
 class KanbanBoard(Base):
+    """Model representing a Kanban Board."""
     __tablename__ = "kanban_boards"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -46,10 +44,12 @@ class KanbanBoard(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
+    # Relationships
     projects = relationship('Project', back_populates='kanban_board')
     statuses = relationship('KanbanStatus', back_populates='kanban_board')
 
 class KanbanStatus(Base):
+    """Model representing a Kanban Status."""
     __tablename__ = "kanban_statuses"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -59,6 +59,6 @@ class KanbanStatus(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     
+    # Relationships
     kanban_board = relationship('KanbanBoard', back_populates='statuses')
     tickets = relationship('Ticket', back_populates='kanban_status')
-
