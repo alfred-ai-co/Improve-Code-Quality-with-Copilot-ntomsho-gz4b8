@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from abc import ABC, abstractmethod
 from app.db_models.base import *
 
@@ -32,30 +33,61 @@ class BaseCRUD(CRUDInterface):
         self.model = model
     
     def create(self, **kwargs):
-        item = self.model(**kwargs)
-        self.db.add(item)
-        self.db.commit()
-        self.db.refresh(item)
-        return item
+        try:
+            item = self.model(**kwargs)
+            self.db.add(item)
+            self.db.commit()
+            return item
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            # Optionally log the error
+            print(f"Error creating item: {e}")
+            raise
 
     def get(self, id: int):
-        return self.db.query(self.model).filter(self.model.id == id).first()
+        try:
+            return self.db.query(self.model).get(id)
+        except SQLAlchemyError as e:
+            # Optionally log the error
+            print(f"Error retrieving item with id {id}: {e}")
+            raise
 
     def get_all(self):
-        return self.db.query(self.model).all()
+        try:
+            return self.db.query(self.model).all()
+        except SQLAlchemyError as e:
+            # Optionally log the error
+            print(f"Error retrieving all items: {e}")
+            raise
 
     def update(self, id: int, **kwargs):
-        item = self.get(id)
-        for key, value in kwargs.items():
-            setattr(item, key, value)
-        self.db.commit()
-        self.db.refresh(item)
-        return item
+        try:
+            item = self.db.query(self.model).get(id)
+            if not item:
+                return None
+            for key, value in kwargs.items():
+                setattr(item, key, value)
+            self.db.commit()
+            return item
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            # Optionally log the error
+            print(f"Error updating item with id {id}: {e}")
+            raise
 
     def delete(self, id: int):
-        item = self.get(id)
-        self.db.delete(item)
-        self.db.commit()
+        try:
+            item = self.db.query(self.model).get(id)
+            if not item:
+                return None
+            self.db.delete(item)
+            self.db.commit()
+            return item
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            # Optionally log the error
+            print(f"Error deleting item with id {id}: {e}")
+            raise
 
 
 class ProjectCRUD(BaseCRUD):
