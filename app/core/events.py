@@ -48,7 +48,7 @@ def create_start_app_handler(app: FastAPI) -> Callable:
         session = SessionLocal()
         
         # Create default Kanban Board and Statuses
-        create_kanban_defaults(session, os.getenv('CREATE_DEFAULTS'))
+        create_kanban_defaults(session, 'true')
         
         # Close session
         session.close()
